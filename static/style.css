@@ -272,8 +272,8 @@ main{ padding:20px 26px; height:calc(100vh - 34px - 66px); overflow-y:auto; }
 /* Details modal: chart period toggle */
 .chart-period-toggle{ display:flex; gap:0; border:1px solid var(--panel-line); border-radius:3px; overflow:hidden; width:fit-content; margin:10px 0 6px; }
 .period-btn{
-  font-family:var(--font-mono); font-size:12px; background:transparent; border:none;
-  color:var(--ink-dim); padding:6px 14px; cursor:pointer;
+  font-family:var(--font-mono); font-size:12px; line-height:1.6; background:transparent; border:none;
+  color:var(--ink-dim); padding:6px 14px; cursor:pointer; display:inline-flex; align-items:center;
 }
 .period-btn + .period-btn{ border-left:1px solid var(--panel-line); }
 .period-btn.active{ color:var(--bg); background:var(--amber); font-weight:600; }
