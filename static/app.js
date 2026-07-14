@@ -22,6 +22,8 @@ const EP = {
   support: `${API}/support`,
   dynamic: `${API}/dynamic_monitor`,
   analysis: `${API}/analysis`,
+  notes: `${API}/notes`,
+  export: `${API}/export_data`,
 };
 
 function withExchange(url) {
@@ -68,7 +70,7 @@ window.addEventListener("keydown", (e) => {
   // trigger view-switch shortcuts) or while the add-holding modal is open.
   const tag = document.activeElement && document.activeElement.tagName;
   if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
-  if (!backdrop.hidden || !watchlistBackdrop.hidden || !detailsBackdrop.hidden || !sellBackdrop.hidden || !simulationBackdrop.hidden) return;
+  if (!backdrop.hidden || !watchlistBackdrop.hidden || !detailsBackdrop.hidden || !sellBackdrop.hidden || !simulationBackdrop.hidden || !exportBackdrop.hidden) return;
   if (e.key === "ArrowRight" || e.key.toLowerCase() === "n") nextView();
   if (["1", "2", "3", "4", "5", "6", "7", "8", "9"].includes(e.key)) showView(VIEWS[parseInt(e.key, 10) - 1]);
   if (e.key === "0") showView(VIEWS[9]);
@@ -78,10 +80,23 @@ if (urlView && VIEWS.includes(urlView)) showView(urlView);
 
 // ---------- clock ----------
 function tickClock() {
-  document.getElementById("board-clock").textContent = new Date().toLocaleTimeString("en-IN", { hour12: false });
+  document.getElementById("board-clock").textContent =
+    new Date().toLocaleTimeString("en-IN", { hour12: false, timeZone: "Asia/Kolkata" }) + " IST";
 }
 setInterval(tickClock, 1000);
 tickClock();
+
+// Explicitly forces Asia/Kolkata regardless of the browser/OS timezone,
+// and labels it -- toLocaleString("en-IN") alone only controls number/date
+// FORMATTING style, not which timezone the time is actually shown in.
+function fmtIST(isoString) {
+  if (!isoString) return "--";
+  const d = new Date(isoString);
+  return d.toLocaleString("en-IN", {
+    timeZone: "Asia/Kolkata", day: "2-digit", month: "2-digit", year: "numeric",
+    hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false,
+  }) + " IST";
+}
 
 // ---------- helpers ----------
 function fmt(n, decimals = 2) {
@@ -257,10 +272,28 @@ async function loadOpportunity() {
     </tr>`).join("");
   wireWatchCheckboxes(tbody);
   emptyNote.hidden = data.candidates.length > 0;
-  const status = data.scan_status;
-  document.getElementById("scan-status").textContent = status
-    ? `Last scan: ${status.status} \u2014 ${status.detail || ""} (${new Date(status.last_run).toLocaleString("en-IN")})`
-    : "No scan run yet";
+
+  // Show BOTH exchanges' scan status together, regardless of which one is
+  // currently toggled -- previously only showed whichever was active.
+  try {
+    const status = await getJSON(EP.status);
+    const bse = status.bse500_scan;
+    const nse = status.nifty500_scan;
+    document.getElementById("scan-status-bse").textContent = bse
+      ? `BSE: ${bse.status} \u2014 ${bse.detail || ""} (${fmtIST(bse.last_run)})`
+      : "BSE: no scan run yet";
+    document.getElementById("scan-status-nse").textContent = nse
+      ? `NSE: ${nse.status} \u2014 ${nse.detail || ""} (${fmtIST(nse.last_run)})`
+      : "NSE: no scan run yet";
+
+    // Also update the "last refreshed" stamp below the clock, from the
+    // same call -- this is when the backend's scheduled poller last
+    // actually pulled fresh prices (not just when this page last fetched).
+    const qp = status.quote_poll;
+    document.getElementById("last-refreshed").textContent = qp
+      ? `Last refreshed: ${fmtIST(qp.last_run)}`
+      : "Last refreshed: --";
+  } catch (err) { /* leave as-is on failure */ }
 }
 
 // ---------- watchlist ----------
@@ -519,7 +552,13 @@ function macdFullLabel(v) { return v === 1 ? "Bullish" : v === -1 ? "Bearish" : 
 function volFullLabel(v) { return v === 1 ? "Spike \u2191 (bullish)" : v === -1 ? "Spike \u2193 (bearish)" : "Normal"; }
 function smaFullLabel(v) { return v === 1 ? "Uptrend (price > SMA50 > SMA200)" : v === -1 ? "Downtrend (price < SMA50 < SMA200)" : "Sideways / mixed"; }
 
+let currentDetailsTicker = null;
+let currentDetailsPeriod = "month";
+
 async function openDetails(ticker) {
+  currentDetailsTicker = ticker;
+  currentDetailsPeriod = "month";
+  document.querySelectorAll(".period-btn").forEach(b => b.classList.toggle("active", b.dataset.period === "month"));
   detailsBackdrop.hidden = false;
   document.getElementById("details-ticker").textContent = ticker;
   document.getElementById("details-price").textContent = "\u2026";
@@ -529,9 +568,16 @@ async function openDetails(ticker) {
     document.getElementById(id).textContent = "\u2026";
   });
   document.getElementById("details-chart-wrap").innerHTML = '<p class="empty-note">Loading&hellip;</p>';
+  document.getElementById("notes-list").innerHTML = "";
 
+  await loadDetailsData();
+  loadNotes(ticker);
+}
+
+async function loadDetailsData() {
+  const ticker = currentDetailsTicker;
   try {
-    const data = await getJSON(`${EP.details}?ticker=${encodeURIComponent(ticker)}`);
+    const data = await getJSON(`${EP.details}?ticker=${encodeURIComponent(ticker)}&period=${currentDetailsPeriod}`);
     const q = data.quote;
     const t = data.technical;
 
@@ -559,6 +605,15 @@ async function openDetails(ticker) {
   }
 }
 
+document.querySelectorAll(".period-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    currentDetailsPeriod = btn.dataset.period;
+    document.querySelectorAll(".period-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    loadDetailsData();
+  });
+});
+
 function renderPriceChart(history, wrap) {
   wrap = wrap || document.getElementById("details-chart-wrap");
   const closes = history.map(h => h.close).filter(c => c !== null && c !== undefined);
@@ -566,27 +621,111 @@ function renderPriceChart(history, wrap) {
     wrap.innerHTML = '<p class="empty-note">Not enough history yet to chart.</p>';
     return;
   }
-  const w = 400, h = 160, pad = 6;
+  const w = 420, h = 170, padTop = 10, padBottom = 10, padLeft = 52, padRight = 8;
   const min = Math.min(...closes), max = Math.max(...closes);
+  const mid = (min + max) / 2;
   const range = (max - min) || 1;
+  const plotW = w - padLeft - padRight, plotH = h - padTop - padBottom;
   const points = closes.map((c, i) => {
-    const x = pad + (i / (closes.length - 1)) * (w - pad * 2);
-    const y = pad + (1 - (c - min) / range) * (h - pad * 2);
+    const x = padLeft + (i / (closes.length - 1)) * plotW;
+    const y = padTop + (1 - (c - min) / range) * plotH;
     return `${x.toFixed(1)},${y.toFixed(1)}`;
   }).join(" ");
   const up = closes[closes.length - 1] >= closes[0];
   const lineColor = up ? "var(--gain)" : "var(--loss)";
+
+  // Pick up to 3 evenly-spaced date labels along the x-axis (start, mid, end)
+  const dateIdxs = closes.length >= 3 ? [0, Math.floor((closes.length - 1) / 2), closes.length - 1] : [0, closes.length - 1];
+  const dateLabels = dateIdxs.map(i => {
+    const x = padLeft + (i / (closes.length - 1)) * plotW;
+    return `<text x="${x.toFixed(1)}" y="${h - 1}" class="chart-axis-label" text-anchor="middle">${history[i].date.slice(5)}</text>`;
+  }).join("");
+
   wrap.innerHTML = `
-    <svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}" preserveAspectRatio="none">
+    <svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}">
+      <text x="${padLeft - 6}" y="${padTop + 4}" class="chart-axis-label" text-anchor="end">${fmt(max)}</text>
+      <text x="${padLeft - 6}" y="${padTop + plotH / 2 + 4}" class="chart-axis-label" text-anchor="end">${fmt(mid)}</text>
+      <text x="${padLeft - 6}" y="${padTop + plotH + 4}" class="chart-axis-label" text-anchor="end">${fmt(min)}</text>
+      <line x1="${padLeft}" y1="${padTop}" x2="${padLeft}" y2="${padTop + plotH}" stroke="var(--panel-line)" stroke-width="1"/>
+      <line x1="${padLeft}" y1="${padTop + plotH}" x2="${w - padRight}" y2="${padTop + plotH}" stroke="var(--panel-line)" stroke-width="1"/>
       <polyline points="${points}" fill="none" stroke="${lineColor}" stroke-width="1.5" vector-effect="non-scaling-stroke"/>
-    </svg>
-    <div class="details-chart-range">
-      <span>${history[0].date}</span><span>${history[history.length - 1].date}</span>
-    </div>`;
+      ${dateLabels}
+    </svg>`;
 }
+
+// ---------- notes journal ----------
+async function loadNotes(ticker) {
+  const container = document.getElementById("notes-list");
+  try {
+    const notes = await getJSON(`${EP.notes}?ticker=${encodeURIComponent(ticker)}`);
+    if (notes.length === 0) {
+      container.innerHTML = '<p class="empty-note">No notes yet for this stock.</p>';
+      return;
+    }
+    container.innerHTML = notes.map(n => `
+      <div class="note-item">
+        <div class="note-item-meta">
+          <span>${fmtIST(n.created_at)}</span>
+          <button class="note-remove" data-id="${n.id}">remove</button>
+        </div>
+        <div class="note-item-text">${n.note.replace(/</g, "&lt;")}</div>
+      </div>`).join("");
+    container.querySelectorAll(".note-remove").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        await fetch(`${EP.notes}/${encodeURIComponent(btn.dataset.id)}`, { method: "DELETE" });
+        loadNotes(ticker);
+      });
+    });
+  } catch (err) {
+    container.innerHTML = '<p class="empty-note">Could not load notes.</p>';
+  }
+}
+
+document.getElementById("add-note-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const input = document.getElementById("note-input");
+  const text = input.value.trim();
+  if (!text || !currentDetailsTicker) return;
+  try {
+    await getJSON(EP.notes, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ticker: currentDetailsTicker, note: text }),
+    });
+    input.value = "";
+    loadNotes(currentDetailsTicker);
+  } catch (err) {
+    alert("Could not save note.");
+  }
+});
 
 document.getElementById("details-modal-close").addEventListener("click", () => { detailsBackdrop.hidden = true; });
 detailsBackdrop.addEventListener("click", (e) => { if (e.target === detailsBackdrop) detailsBackdrop.hidden = true; });
+
+// ---------- export modal ----------
+const exportBackdrop = document.getElementById("export-modal-backdrop");
+document.getElementById("btn-export").addEventListener("click", () => { exportBackdrop.hidden = false; });
+document.getElementById("export-modal-cancel").addEventListener("click", () => { exportBackdrop.hidden = true; });
+
+function triggerExport(format) {
+  const sections = Array.from(document.querySelectorAll('input[name="export-section"]:checked')).map(cb => cb.value);
+  if (sections.length === 0) {
+    alert("Select at least one section to export.");
+    return;
+  }
+  const startDate = document.getElementById("export-start-date").value;
+  const endDate = document.getElementById("export-end-date").value;
+  const params = new URLSearchParams({ sections: sections.join(","), format });
+  if (startDate) params.set("start_date", startDate);
+  if (endDate) params.set("end_date", endDate);
+  // Direct navigation (not fetch) avoids any CORS complexity for a file
+  // download, and works the same way whether talking to the self-hosted
+  // backend or Firebase Functions.
+  window.open(`${EP.export}?${params.toString()}`, "_blank");
+  exportBackdrop.hidden = true;
+}
+document.getElementById("export-csv-btn").addEventListener("click", () => triggerExport("csv"));
+document.getElementById("export-pdf-btn").addEventListener("click", () => triggerExport("pdf"));
 
 // ---------- sell modal ----------
 const sellBackdrop = document.getElementById("sell-modal-backdrop");

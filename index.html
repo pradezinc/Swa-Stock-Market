@@ -33,7 +33,11 @@
       <button class="tab" data-view="dynamic">09 Dynamic</button>
       <button class="tab" data-view="analysis">10 Analysis</button>
     </nav>
-    <div class="board-clock" id="board-clock">--:--:--</div>
+    <div class="board-clock-wrap">
+      <div class="board-clock" id="board-clock">--:--:--</div>
+      <div class="last-refreshed" id="last-refreshed">Last refreshed: --</div>
+      <button class="btn-export" id="btn-export">Export</button>
+    </div>
   </header>
 
   <main id="views">
@@ -79,7 +83,10 @@
     <section class="view" id="view-opportunity">
       <div class="view-head">
         <h1>Opportunity Watch</h1>
-        <span class="scan-status" id="scan-status">&mdash;</span>
+      </div>
+      <div class="scan-status-row">
+        <span class="scan-status" id="scan-status-bse">&mdash;</span>
+        <span class="scan-status" id="scan-status-nse">&mdash;</span>
       </div>
       <p class="section-note">Stocks down long-term on price, but current technicals look good &mdash; candidates worth researching, not recommendations.</p>
       <table class="data-table" id="opportunity-table">
@@ -234,6 +241,28 @@
     </form>
   </div>
 
+  <div class="modal-backdrop" id="export-modal-backdrop" hidden>
+    <div class="modal">
+      <h2>Export data</h2>
+      <div class="export-sections">
+        <label><input type="checkbox" name="export-section" value="portfolio" checked> Portfolio</label>
+        <label><input type="checkbox" name="export-section" value="pnl" checked> P&amp;L / Sold Transactions</label>
+        <label><input type="checkbox" name="export-section" value="watchlist" checked> Watchlist</label>
+        <label><input type="checkbox" name="export-section" value="simulation" checked> Simulate</label>
+        <label><input type="checkbox" name="export-section" value="whatif" checked> What-if Log</label>
+        <label><input type="checkbox" name="export-section" value="notes" checked> Notes</label>
+      </div>
+      <p class="modal-note">Date range applies to P&amp;L, What-if, and Notes only (Portfolio/Watchlist/Simulate are current snapshots).</p>
+      <label>From <input type="date" id="export-start-date"></label>
+      <label>To <input type="date" id="export-end-date"></label>
+      <div class="modal-actions">
+        <button type="button" id="export-modal-cancel">Cancel</button>
+        <button type="button" id="export-csv-btn">Download CSV</button>
+        <button type="button" id="export-pdf-btn">Download PDF</button>
+      </div>
+    </div>
+  </div>
+
   <div class="modal-backdrop" id="sell-modal-backdrop" hidden>
     <form class="modal" id="sell-form">
       <h2>Sell <span id="sell-modal-ticker"></span></h2>
@@ -295,9 +324,21 @@
           <tr><td>Score</td><td id="details-score">--</td></tr>
         </tbody>
       </table>
+      <div class="chart-period-toggle" id="chart-period-toggle">
+        <button class="period-btn" data-period="week">Week</button>
+        <button class="period-btn active" data-period="month">Month</button>
+        <button class="period-btn" data-period="year">Year</button>
+      </div>
       <div class="details-chart-wrap" id="details-chart-wrap">
         <p class="empty-note" id="details-chart-empty" hidden>Not enough history yet to chart.</p>
       </div>
+
+      <h2 class="section-subhead">Notes</h2>
+      <form id="add-note-form">
+        <textarea name="note" id="note-input" placeholder="Write your analysis or notes for this stock..." rows="3"></textarea>
+        <button type="submit" class="btn-add">+ Add note</button>
+      </form>
+      <div id="notes-list" class="notes-list"></div>
     </div>
   </div>
 
