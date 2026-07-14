@@ -13,13 +13,20 @@
   </div>
 
   <header class="board-header">
-    <div class="board-title">
-      <span class="board-title-main">STOCK MONITOR</span>
-      <span class="board-title-sub" id="board-title-sub">Sensex&nbsp;30 &middot; live board</span>
-    </div>
-    <div class="exchange-toggle" id="exchange-toggle">
-      <button class="exch-btn active" data-exchange="BSE">BSE</button>
-      <button class="exch-btn" data-exchange="NSE">NSE</button>
+    <div class="board-header-top">
+      <div class="board-title">
+        <span class="board-title-main">STOCK MONITOR</span>
+        <span class="board-title-sub" id="board-title-sub">Sensex&nbsp;30 &middot; live board</span>
+      </div>
+      <div class="exchange-toggle" id="exchange-toggle">
+        <button class="exch-btn active" data-exchange="BSE">BSE</button>
+        <button class="exch-btn" data-exchange="NSE">NSE</button>
+      </div>
+      <div class="board-clock-wrap">
+        <div class="board-clock" id="board-clock">--:--:--</div>
+        <div class="last-refreshed" id="last-refreshed">Last refreshed: --</div>
+        <button class="btn-export" id="btn-export">Export</button>
+      </div>
     </div>
     <nav class="view-tabs" id="view-tabs">
       <button class="tab" data-view="portfolio">01 Portfolio</button>
@@ -33,11 +40,6 @@
       <button class="tab" data-view="dynamic">09 Dynamic</button>
       <button class="tab" data-view="analysis">10 Analysis</button>
     </nav>
-    <div class="board-clock-wrap">
-      <div class="board-clock" id="board-clock">--:--:--</div>
-      <div class="last-refreshed" id="last-refreshed">Last refreshed: --</div>
-      <button class="btn-export" id="btn-export">Export</button>
-    </div>
   </header>
 
   <main id="views">
@@ -49,7 +51,7 @@
       </div>
       <table class="data-table" id="portfolio-table">
         <thead>
-          <tr><th>Watch</th><th>Ticker</th><th>Qty</th><th>Buy&nbsp;Price</th><th>LTP</th><th>P&amp;L</th><th>P&amp;L%</th><th></th><th></th><th></th><th></th><th></th></tr>
+          <tr><th>Watch</th><th>Ticker</th><th>Qty</th><th>Buy&nbsp;Price</th><th>LTP</th><th>P&amp;L<span class="info-icon" title="Profit or loss in rupees: (current price - buy price) x quantity.">i</span></th><th>P&amp;L%<span class="info-icon" title="Profit or loss as a percentage of your buy price.">i</span></th><th></th><th></th><th></th><th></th><th></th></tr>
         </thead>
         <tbody></tbody>
       </table>
@@ -75,7 +77,7 @@
     <section class="view" id="view-screener">
       <div class="view-head"><h1>Technical Screener</h1></div>
       <table class="data-table" id="screener-table">
-        <thead><tr><th>Watch</th><th>Ticker</th><th>Trend</th><th>RSI</th><th>MACD</th><th>Vol</th><th>Score</th><th>Verdict</th><th></th></tr></thead>
+        <thead><tr><th>Watch</th><th>Ticker</th><th>Trend<span class="info-icon" title="Based on price vs 50-day and 200-day moving averages (SMA).">i</span></th><th>RSI<span class="info-icon" title="Relative Strength Index (0-100). Above 70 = overbought, below 30 = oversold.">i</span></th><th>MACD<span class="info-icon" title="Moving Average Convergence Divergence -- shows a bullish or bearish momentum shift.">i</span></th><th>Vol<span class="info-icon" title="Volume Signal -- flags when today's trading volume is well above its 20-day average.">i</span></th><th>Score<span class="info-icon" title="Number of bullish signals out of 4: Trend, RSI, MACD, Volume.">i</span></th><th>Verdict<span class="info-icon" title="Good = 3+ bullish signals. Neutral = mixed. Bad = 3+ bearish signals.">i</span></th><th></th></tr></thead>
         <tbody></tbody>
       </table>
     </section>
@@ -90,7 +92,7 @@
       </div>
       <p class="section-note">Stocks down long-term on price, but current technicals look good &mdash; candidates worth researching, not recommendations.</p>
       <table class="data-table" id="opportunity-table">
-        <thead><tr><th>Watch</th><th>Ticker</th><th>Flagged</th><th>3-5y Return</th><th>Tech&nbsp;Score</th><th>Verdict</th></tr></thead>
+        <thead><tr><th>Watch</th><th>Ticker</th><th>Flagged<span class="info-icon" title="Date this stock was flagged by the nightly BSE 500 / Nifty 500 scan.">i</span></th><th>3-5y Return<span class="info-icon" title="Price return over the last 3-5 years -- negative means the stock is down long-term.">i</span></th><th>Tech&nbsp;Score<span class="info-icon" title="Same 0-4 bullish signal count as the Screener.">i</span></th><th>Verdict<span class="info-icon" title="Good = 3+ bullish signals. Neutral = mixed. Bad = 3+ bearish signals.">i</span></th></tr></thead>
         <tbody></tbody>
       </table>
       <p class="empty-note" id="opportunity-empty" hidden>No candidates flagged yet &mdash; the nightly scan builds this list.</p>
@@ -132,7 +134,7 @@
       <p class="section-note">Forward: a hypothetical position tracked with real live prices, separate from your real portfolio. Backward: instant what-if using stored history.</p>
       <h2 class="section-subhead">Paper Positions</h2>
       <table class="data-table" id="simulation-table">
-        <thead><tr><th>Watch</th><th>Ticker</th><th>Qty</th><th>Buy&nbsp;Price</th><th>LTP</th><th>P&amp;L</th><th>P&amp;L%</th><th></th></tr></thead>
+        <thead><tr><th>Watch</th><th>Ticker</th><th>Qty</th><th>Buy&nbsp;Price</th><th>LTP</th><th>P&amp;L<span class="info-icon" title="Profit or loss in rupees: (current price - buy price) x quantity.">i</span></th><th>P&amp;L%<span class="info-icon" title="Profit or loss as a percentage of your buy price.">i</span></th><th></th></tr></thead>
         <tbody></tbody>
       </table>
       <p class="empty-note" id="simulation-empty" hidden>No paper trades yet &mdash; add one to track it going forward.</p>
@@ -157,7 +159,7 @@
       <div class="split-layout">
         <div class="split-main">
           <table class="data-table" id="support-table">
-            <thead><tr><th>Watch</th><th>Ticker</th><th>Price</th><th>3-day&nbsp;Chg</th><th>Support</th><th>Proximity</th><th>Touches</th><th>Flag</th></tr></thead>
+            <thead><tr><th>Watch</th><th>Ticker</th><th>Price</th><th>3-day&nbsp;Chg<span class="info-icon" title="Price change over the last 2-3 trading days.">i</span></th><th>Support<span class="info-icon" title="Price level where the stock has historically bounced multiple times (24-month lookback).">i</span></th><th>Proximity<span class="info-icon" title="How close the current price is to that support level.">i</span></th><th>Touches<span class="info-icon" title="Number of times price has bounced near this support level historically.">i</span></th><th>Flag<span class="info-icon" title="Marked when the stock is both declining over 2-3 days AND near a validated support level.">i</span></th></tr></thead>
             <tbody></tbody>
           </table>
           <p class="empty-note" id="support-empty" hidden>No tracked stocks with enough history yet.</p>

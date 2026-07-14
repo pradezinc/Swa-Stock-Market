@@ -35,11 +35,11 @@ html,body{
 /* ---------- ticker strip (signature element) ---------- */
 .ticker-strip{
   background:#000; border-bottom:1px solid var(--amber-dim);
-  overflow:hidden; white-space:nowrap; height:34px; display:flex; align-items:center;
+  overflow:hidden; white-space:nowrap; height:40px; display:flex; align-items:center;
 }
 .ticker-track{
   display:inline-block; padding-left:100%;
-  font-family:var(--font-mono); font-size:14px; letter-spacing:.5px;
+  font-family:var(--font-mono); font-size:18px; letter-spacing:.5px;
   color:var(--amber);
   animation:ticker-scroll 45s linear infinite;
 }
@@ -52,9 +52,12 @@ html,body{
 
 /* ---------- header ---------- */
 .board-header{
-  display:flex; align-items:center; justify-content:space-between;
-  padding:14px 22px; border-bottom:1px solid var(--panel-line);
+  padding:14px 22px 0; border-bottom:1px solid var(--panel-line);
   background:var(--panel);
+}
+.board-header-top{
+  display:flex; align-items:center; justify-content:space-between;
+  padding-bottom:12px;
 }
 .board-title-main{
   font-family:var(--font-display); font-weight:700; font-size:22px;
@@ -63,7 +66,10 @@ html,body{
 .board-title-sub{
   display:block; font-size:12px; color:var(--ink-dim); letter-spacing:.5px; margin-top:2px;
 }
-.view-tabs{ display:flex; gap:6px; flex-wrap:wrap; max-width:640px; }
+.view-tabs{
+  display:flex; gap:6px; flex-wrap:nowrap; overflow-x:auto; width:100%;
+  padding-bottom:12px; scrollbar-width:thin;
+}
 .exchange-toggle{ display:flex; gap:0; border:1px solid var(--panel-line); border-radius:3px; overflow:hidden; }
 .exch-btn{
   font-family:var(--font-mono); font-size:13px; font-weight:600; letter-spacing:.5px;
@@ -74,11 +80,18 @@ html,body{
 .exch-btn.active{ color:var(--bg); background:var(--ink); }
 
 .tab{
-  font-family:var(--font-display); font-size:14px; letter-spacing:.5px;
+  font-family:var(--font-display); font-size:13px; letter-spacing:.3px;
   background:transparent; border:1px solid var(--panel-line); color:var(--ink-dim);
-  padding:8px 16px; cursor:pointer; border-radius:2px;
+  padding:7px 12px; cursor:pointer; border-radius:2px; white-space:nowrap; flex-shrink:0;
 }
 .tab.active{ color:var(--bg); background:var(--amber); border-color:var(--amber); font-weight:600; }
+
+.info-icon{
+  display:inline-block; width:14px; height:14px; line-height:13px; text-align:center;
+  border-radius:50%; border:1px solid var(--ink-dim); color:var(--ink-dim);
+  font-size:10px; font-style:normal; font-family:var(--font-body); cursor:help; margin-left:4px;
+}
+.info-icon:hover{ border-color:var(--amber); color:var(--amber); }
 .board-clock{
   font-family:var(--font-mono); font-size:20px; color:var(--amber); letter-spacing:1px;
 }
