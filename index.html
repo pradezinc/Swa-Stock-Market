@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Stock Monitor</title>
+<link rel="stylesheet" href="static/style.css">
+</head>
+<body>
+
+  <div class="ticker-strip" id="ticker-strip">
+    <div class="ticker-track" id="ticker-track">Loading market data&hellip;</div>
+  </div>
+
+  <header class="board-header">
+    <div class="board-title">
+      <span class="board-title-main">STOCK MONITOR</span>
+      <span class="board-title-sub" id="board-title-sub">Sensex&nbsp;30 &middot; live board</span>
+    </div>
+    <div class="exchange-toggle" id="exchange-toggle">
+      <button class="exch-btn active" data-exchange="BSE">BSE</button>
+      <button class="exch-btn" data-exchange="NSE">NSE</button>
+    </div>
+    <nav class="view-tabs" id="view-tabs">
+      <button class="tab" data-view="portfolio">01 Portfolio</button>
+      <button class="tab" data-view="movers">02 Movers</button>
+      <button class="tab" data-view="screener">03 Screener</button>
+      <button class="tab" data-view="opportunity">04 Opportunity</button>
+      <button class="tab" data-view="watchlist">05 Watchlist</button>
+      <button class="tab" data-view="pnl">06 P&amp;L</button>
+      <button class="tab" data-view="simulate">07 Simulate</button>
+      <button class="tab" data-view="support">08 Support</button>
+      <button class="tab" data-view="dynamic">09 Dynamic</button>
+      <button class="tab" data-view="analysis">10 Analysis</button>
+    </nav>
+    <div class="board-clock" id="board-clock">--:--:--</div>
+  </header>
+
+  <main id="views">
+
+    <section class="view active" id="view-portfolio">
+      <div class="view-head">
+        <h1>Portfolio</h1>
+        <button class="btn-add" id="btn-add-holding">+ Add holding</button>
+      </div>
+      <table class="data-table" id="portfolio-table">
+        <thead>
+          <tr><th>Watch</th><th>Ticker</th><th>Qty</th><th>Buy&nbsp;Price</th><th>LTP</th><th>P&amp;L</th><th>P&amp;L%</th><th></th><th></th><th></th><th></th><th></th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <p class="empty-note" id="portfolio-empty" hidden>No holdings yet &mdash; add your first one.</p>
+    </section>
+
+    <section class="view" id="view-movers">
+      <div class="view-head"><h1>Gainers, Losers &amp; Trend</h1></div>
+      <div class="movers-grid">
+        <div>
+          <h2 class="col-label gain">Top Gainers</h2>
+          <table class="data-table"><thead><tr><th>Watch</th><th>Ticker</th><th>LTP</th><th>Chg%</th></tr></thead>
+            <tbody id="gainers-body"></tbody></table>
+        </div>
+        <div>
+          <h2 class="col-label loss">Top Losers</h2>
+          <table class="data-table"><thead><tr><th>Watch</th><th>Ticker</th><th>LTP</th><th>Chg%</th></tr></thead>
+            <tbody id="losers-body"></tbody></table>
+        </div>
+      </div>
+    </section>
+
+    <section class="view" id="view-screener">
+      <div class="view-head"><h1>Technical Screener</h1></div>
+      <table class="data-table" id="screener-table">
+        <thead><tr><th>Watch</th><th>Ticker</th><th>Trend</th><th>RSI</th><th>MACD</th><th>Vol</th><th>Score</th><th>Verdict</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <section class="view" id="view-opportunity">
+      <div class="view-head">
+        <h1>Opportunity Watch</h1>
+        <span class="scan-status" id="scan-status">&mdash;</span>
+      </div>
+      <p class="section-note">Stocks down long-term on price, but current technicals look good &mdash; candidates worth researching, not recommendations.</p>
+      <table class="data-table" id="opportunity-table">
+        <thead><tr><th>Watch</th><th>Ticker</th><th>Flagged</th><th>3-5y Return</th><th>Tech&nbsp;Score</th><th>Verdict</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <p class="empty-note" id="opportunity-empty" hidden>No candidates flagged yet &mdash; the nightly scan builds this list.</p>
+    </section>
+
+    <section class="view" id="view-watchlist">
+      <div class="view-head">
+        <h1>Watchlist</h1>
+        <button class="btn-add" id="btn-add-watchlist">+ Add to watchlist</button>
+      </div>
+      <p class="section-note">Stocks you're tracking without owning &mdash; no buy price, just live price and daily change.</p>
+      <table class="data-table" id="watchlist-table">
+        <thead><tr><th>Watch</th><th>Ticker</th><th>LTP</th><th>Chg%</th><th></th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <p class="empty-note" id="watchlist-empty" hidden>Nothing on your watchlist yet &mdash; add a stock you want to keep an eye on.</p>
+    </section>
+
+    <section class="view" id="view-pnl">
+      <div class="view-head"><h1>P&amp;L</h1></div>
+      <div class="details-summary">
+        <div><span class="details-label">Realized P&amp;L</span><span class="details-value" id="pnl-realized">--</span></div>
+        <div><span class="details-label">Unrealized P&amp;L</span><span class="details-value" id="pnl-unrealized">--</span></div>
+        <div><span class="details-label">Net P&amp;L</span><span class="details-value" id="pnl-net">--</span></div>
+      </div>
+      <h2 class="section-subhead">Sold Transactions</h2>
+      <table class="data-table" id="pnl-table">
+        <thead><tr><th>Ticker</th><th>Sold&nbsp;Date</th><th>Qty</th><th>Bought</th><th>Sold</th><th>Profit</th><th>Profit%</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <p class="empty-note" id="pnl-empty" hidden>No sales recorded yet.</p>
+    </section>
+
+    <section class="view" id="view-simulate">
+      <div class="view-head">
+        <h1>Simulate</h1>
+        <button class="btn-add" id="btn-add-simulation">+ Add paper trade</button>
+      </div>
+      <p class="section-note">Forward: a hypothetical position tracked with real live prices, separate from your real portfolio. Backward: instant what-if using stored history.</p>
+      <h2 class="section-subhead">Paper Positions</h2>
+      <table class="data-table" id="simulation-table">
+        <thead><tr><th>Watch</th><th>Ticker</th><th>Qty</th><th>Buy&nbsp;Price</th><th>LTP</th><th>P&amp;L</th><th>P&amp;L%</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <p class="empty-note" id="simulation-empty" hidden>No paper trades yet &mdash; add one to track it going forward.</p>
+
+      <h2 class="section-subhead">What-if Calculator</h2>
+      <form class="inline-form" id="whatif-form">
+        <input type="text" name="ticker" placeholder="RELIANCE.BO or RELIANCE.NS" required>
+        <input type="number" name="quantity" placeholder="Qty" step="any" required>
+        <input type="date" name="as_of_date" required>
+        <button type="submit">Calculate</button>
+      </form>
+      <table class="data-table" id="whatif-table">
+        <thead><tr><th>Ticker</th><th>Qty</th><th>As&nbsp;of</th><th>Then</th><th>Now</th><th>Profit</th><th>Profit%</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <p class="empty-note" id="whatif-empty" hidden>No what-if checks yet.</p>
+    </section>
+
+    <section class="view" id="view-support">
+      <div class="view-head"><h1>Support Watch</h1></div>
+      <p class="section-note">Scans Portfolio + Watchlist + Simulate for stocks down over the last 2-3 days and near a historically validated support level (24-month lookback, multiple bounce points required).</p>
+      <div class="split-layout">
+        <div class="split-main">
+          <table class="data-table" id="support-table">
+            <thead><tr><th>Watch</th><th>Ticker</th><th>Price</th><th>3-day&nbsp;Chg</th><th>Support</th><th>Proximity</th><th>Touches</th><th>Flag</th></tr></thead>
+            <tbody></tbody>
+          </table>
+          <p class="empty-note" id="support-empty" hidden>No tracked stocks with enough history yet.</p>
+        </div>
+        <div class="split-side">
+          <h2 class="section-subhead">Dynamic Zone</h2>
+          <div id="dynamic-zone-cards" class="dynamic-cards"></div>
+          <p class="empty-note" id="dynamic-zone-empty" hidden>Check "Watch" on any stock to monitor it here.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="view" id="view-dynamic">
+      <div class="view-head">
+        <h1>Dynamic Monitor</h1>
+        <div class="dynamic-controls">
+          <label>Autoscroll <input type="checkbox" id="autoscroll-toggle"></label>
+          <label>Interval&nbsp;(sec) <input type="number" id="autoscroll-interval" value="15" min="3"></label>
+          <button type="button" id="dynamic-prev">&larr; Prev</button>
+          <span id="dynamic-page-indicator">Page 1/1</span>
+          <button type="button" id="dynamic-next">Next &rarr;</button>
+        </div>
+      </div>
+      <div id="dynamic-fullscreen-cards" class="dynamic-cards dynamic-cards-full"></div>
+      <p class="empty-note" id="dynamic-fullscreen-empty" hidden>Nothing marked for dynamic monitoring yet &mdash; check "Watch" on any stock, anywhere in the app.</p>
+    </section>
+
+    <section class="view" id="view-analysis">
+      <div class="view-head"><h1>Portfolio Analysis</h1></div>
+      <div class="details-summary">
+        <div><span class="details-label">Net Worth</span><span class="details-value" id="analysis-networth">--</span></div>
+      </div>
+      <div class="analysis-grid">
+        <div>
+          <h2 class="section-subhead">Allocation by Stock</h2>
+          <div id="analysis-by-stock" class="allocation-bars"></div>
+        </div>
+        <div>
+          <h2 class="section-subhead">Allocation by Exchange</h2>
+          <div id="analysis-by-exchange" class="allocation-bars"></div>
+        </div>
+      </div>
+      <h2 class="section-subhead">Net Worth Over Time</h2>
+      <div id="analysis-networth-chart" class="details-chart-wrap">
+        <p class="empty-note">Tracking starts today &mdash; check back as daily snapshots build up.</p>
+      </div>
+    </section>
+
+  </main>
+
+  <div class="modal-backdrop" id="modal-backdrop" hidden>
+    <form class="modal" id="add-holding-form">
+      <h2 id="holding-modal-title">Add holding</h2>
+      <p class="modal-note" id="holding-modal-note">Already hold this stock? This blends into a quantity-weighted average price, not a duplicate row.</p>
+      <label>Ticker (e.g. RELIANCE.BO or RELIANCE.NS)
+        <input type="text" name="ticker" required placeholder="RELIANCE.BO">
+      </label>
+      <label>Quantity
+        <input type="number" name="quantity" step="any" required>
+      </label>
+      <label>Buy price
+        <input type="number" name="buy_price" step="any" required>
+      </label>
+      <div class="modal-actions">
+        <button type="button" id="modal-cancel">Cancel</button>
+        <button type="submit">Save</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="modal-backdrop" id="watchlist-modal-backdrop" hidden>
+    <form class="modal" id="add-watchlist-form">
+      <h2>Add to watchlist</h2>
+      <label>Ticker (e.g. RELIANCE.BO or RELIANCE.NS)
+        <input type="text" name="ticker" required placeholder="RELIANCE.BO">
+      </label>
+      <div class="modal-actions">
+        <button type="button" id="watchlist-modal-cancel">Cancel</button>
+        <button type="submit">Save</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="modal-backdrop" id="sell-modal-backdrop" hidden>
+    <form class="modal" id="sell-form">
+      <h2>Sell <span id="sell-modal-ticker"></span></h2>
+      <label>Quantity to sell
+        <input type="number" name="quantity" step="any" required>
+      </label>
+      <label>Sell price
+        <input type="number" name="sell_price" step="any" required>
+      </label>
+      <label>Sell date
+        <input type="date" name="sell_date" required>
+      </label>
+      <div class="modal-actions">
+        <button type="button" id="sell-modal-cancel">Cancel</button>
+        <button type="submit">Sell</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="modal-backdrop" id="simulation-modal-backdrop" hidden>
+    <form class="modal" id="add-simulation-form">
+      <h2>Add paper trade</h2>
+      <label>Ticker (e.g. RELIANCE.BO or RELIANCE.NS)
+        <input type="text" name="ticker" required placeholder="RELIANCE.BO">
+      </label>
+      <label>Quantity
+        <input type="number" name="quantity" step="any" required>
+      </label>
+      <label>Buy price
+        <input type="number" name="buy_price" step="any" required>
+      </label>
+      <label>Buy date (optional)
+        <input type="date" name="buy_date">
+      </label>
+      <div class="modal-actions">
+        <button type="button" id="simulation-modal-cancel">Cancel</button>
+        <button type="submit">Save</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="modal-backdrop" id="details-modal-backdrop" hidden>
+    <div class="modal details-modal">
+      <div class="modal-head">
+        <h2 id="details-ticker">&mdash;</h2>
+        <button type="button" id="details-modal-close" aria-label="Close">&times;</button>
+      </div>
+      <div class="details-summary">
+        <div><span class="details-label">LTP</span><span class="details-value" id="details-price">--</span></div>
+        <div><span class="details-label">Chg%</span><span class="details-value" id="details-pct">--</span></div>
+        <div><span class="details-label">Verdict</span><span class="details-value" id="details-verdict">--</span></div>
+      </div>
+      <table class="data-table details-tech-table">
+        <tbody>
+          <tr><td>Trend (SMA 50/200)</td><td id="details-trend">--</td></tr>
+          <tr><td>RSI</td><td id="details-rsi">--</td></tr>
+          <tr><td>MACD</td><td id="details-macd">--</td></tr>
+          <tr><td>Volume</td><td id="details-vol">--</td></tr>
+          <tr><td>Score</td><td id="details-score">--</td></tr>
+        </tbody>
+      </table>
+      <div class="details-chart-wrap" id="details-chart-wrap">
+        <p class="empty-note" id="details-chart-empty" hidden>Not enough history yet to chart.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- IMPORTANT: set your deployed Firebase Functions base URL here before
+       first use -- see config.js / the "Connect to your backend" prompt below. -->
+  <script src="static/config.js"></script>
+  <script src="static/app.js"></script>
+</body>
+</html>
